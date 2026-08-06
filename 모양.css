@@ -195,10 +195,15 @@ button:disabled { cursor: default; }
 .보기목록 { list-style: none; margin: 14px 0 0; padding: 0; }
 .보기목록 li { margin: 0; }
 
+/* 보기 한 줄 = 보기 글 + 오른쪽 O/X 칸 (2026-08-06 사장님 요청).
+   종이에 볼펜으로 풀 때처럼 스스로 표시해 두는 칸이라 채점과는 상관없다. */
+.보기줄 { display: flex; align-items: flex-start; gap: 4px; }
+
 .보기 {
   display: flex;
   gap: 8px;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   margin: 0;
   padding: 9px 6px;
   border: 0;
@@ -213,6 +218,13 @@ button:disabled { cursor: default; }
 .보기번호 { flex: none; font-weight: 600; }
 .보기글 { flex: 1; min-width: 0; }
 .보기:active { background: rgba(127, 127, 127, 0.14); }
+.보기:disabled { cursor: default; opacity: 1; }
+/* 한 번 눌러 골라 둔 상태. 한 번 더 눌러야 답으로 나간다 */
+.보기.찍음 {
+  background: var(--칸바탕);
+  box-shadow: inset 3px 0 0 var(--주색);
+  font-weight: 600;
+}
 /* 채점 뒤: 책에 색연필로 표시한 느낌으로 왼쪽에 굵은 선 + 옅은 바탕 */
 .보기.정답 {
   background: var(--정답바탕);
@@ -224,6 +236,40 @@ button:disabled { cursor: default; }
   box-shadow: inset 3px 0 0 var(--빨강);
   text-decoration: line-through;
   text-decoration-thickness: 1px;
+}
+
+.표시칸 { flex: none; display: flex; gap: 4px; padding-top: 7px; }
+.표시 {
+  width: 30px;
+  min-width: 30px;
+  margin: 0;
+  padding: 4px 0;
+  border: 1px solid var(--선);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--흐린글자);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+}
+.표시.동그라미.켬 {
+  background: var(--정답바탕);
+  border-color: var(--초록);
+  color: var(--초록);
+}
+.표시.엑스.켬 {
+  background: var(--오답바탕);
+  border-color: var(--빨강);
+  color: var(--빨강);
+}
+.표시:disabled { opacity: 0.55; cursor: default; }
+
+.누름안내 {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--흐린글자);
+  text-align: center;
 }
 
 /* 건너뛰기: 실수로 누르지 않게 보기에서 한참 띄운다 */
@@ -278,3 +324,34 @@ button:disabled { cursor: default; }
 }
 
 .꼬리 { margin-top: 28px; font-size: 12px; color: var(--흐린글자); text-align: center; }
+
+/* ── 리포트 · 오답노트 · 해설 다시 보기 (2026-08-06 사장님 요청) ── */
+.리포트카드 { cursor: pointer; }
+.리포트카드:active { background: var(--선); }
+.리포트카드 b { font-weight: 700; color: var(--글자); }
+
+.작은단추 {
+  width: auto;
+  margin: 8px 0 2px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+/* 해설만 쭉 읽고 넘어가는 화면. 지면 느낌은 그대로 두되 답이 한눈에 보이게 */
+.해설장 { margin: 14px 0; }
+.해설판정 { margin: 12px 0 2px; font-size: 14px; font-weight: 700; }
+.해설보기목록 { list-style: none; margin: 6px 0 12px; padding: 0; }
+.해설보기 {
+  display: flex;
+  gap: 8px;
+  padding: 7px 6px;
+  border-radius: 6px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--지면글자);
+}
+.해설표 { flex: none; width: 20px; }
+.해설보기.정답 { background: var(--정답바탕); box-shadow: inset 3px 0 0 var(--초록); font-weight: 700; }
+.해설보기.오답 { background: var(--오답바탕); box-shadow: inset 3px 0 0 var(--빨강); }
+
+.담기단추.담김 { background: var(--칸바탕); font-weight: 700; }
