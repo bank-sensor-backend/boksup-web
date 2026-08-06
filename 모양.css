@@ -137,8 +137,15 @@ button:disabled { cursor: default; }
   padding-top: env(safe-area-inset-top);
 }
 .진행 { font-size: 16px; font-weight: 700; }
-.문제시계 { margin-left: auto; font-size: 13px; }
-.전체시계 { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+/* 2026-08-06 사장님 지시: 묶음 전체를 이어 재던 시계를 없애고, 문제마다 0초부터
+   다시 재는 시계를 크게 띄운다. 옆의 작은 글씨는 지금 답하면 받는 점수. */
+.점수힌트 { margin-left: auto; font-size: 13px; }
+.문제시계 {
+  margin-left: 10px;
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
 
 /* ── 문제집 지면처럼 (2026-08-06 사장님 요청) ──────────────────
    책은 흰 종이에 검은 글씨, 왼쪽에 큼직한 문제번호, 발문은 굵게,
