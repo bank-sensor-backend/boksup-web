@@ -1,0 +1,50 @@
+# 중개사 복습 웹 — GitHub Pages 자동 배포
+#
+# 이 저장소에는 웹앱만 들어 있다(매물등록 도우미와 무관).
+# main에 뭔가 올라오면 바로 Pages로 배포한다.
+name: web-pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 오프라인 캐시 판번호 박기
+        run: |
+          # 파일이 바뀌면 폰이 새로 받아오도록 커밋 번호를 판번호로 쓴다
+          sed -i "s/__판번호__/${GITHUB_SHA::12}/" sw.js
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # id는 영문만 쓸 수 있다(한글을 쓰면 워크플로가 시작조차 못 한다)
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: 주소 알려 주기
+        run: echo "웹 주소 → ${{ steps.deployment.outputs.page_url }}"

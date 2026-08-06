@@ -1,0 +1,273 @@
+/* 중개사 복습 — 폰에서 한 손으로 쓰기 좋게. 밝은/어두운 화면 모두 대응한다. */
+:root {
+  --바탕: #ffffff;
+  --글자: #1a1c1a;
+  --흐린글자: #5b615c;
+  --선: #dfe3e0;
+  --칸바탕: #f3f6f4;
+  --주색: #1f6f54;
+  --주색글자: #ffffff;
+  --초록: #2e7d46;
+  --주황: #b26a00;
+  --빨강: #c62828;
+  --지면바탕: #fffdf7;   /* 책 종이처럼 아주 옅은 미색 */
+  --지면글자: #17181a;
+  --지문바탕: #faf7ee;
+  --정답바탕: #e8f5ec;
+  --오답바탕: #fdeceb;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --바탕: #121513;
+    --글자: #e8ebe9;
+    --흐린글자: #9aa29c;
+    --선: #2b302d;
+    --칸바탕: #1b201d;
+    --주색: #3fa37c;
+    --주색글자: #07130e;
+    --초록: #63c281;
+    --주황: #e0a33c;
+    --빨강: #f0736c;
+    --지면바탕: #16191a;
+    --지면글자: #eceef0;
+    --지문바탕: #1c2022;
+    --정답바탕: #17301f;
+    --오답바탕: #33191a;
+  }
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  margin: 0;
+  background: var(--바탕);
+  color: var(--글자);
+  font: 16px/1.55 -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo',
+        'Noto Sans KR', 'Malgun Gothic', sans-serif;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px 16px calc(32px + env(safe-area-inset-bottom));
+}
+
+h1 { font-size: 22px; margin: 0; }
+h2 { font-size: 18px; margin: 24px 0 8px; }
+p { margin: 8px 0; }
+
+.머리 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: env(safe-area-inset-top);
+  margin-bottom: 8px;
+}
+.머리단추 { margin-left: auto; display: flex; gap: 8px; }
+.머리단추 button { margin: 0; width: auto; padding: 8px 12px; font-size: 14px; }
+
+.부제목 { font-size: 15px; color: var(--흐린글자); margin: 22px 0 6px; }
+
+.흐림 { color: var(--흐린글자); }
+.흐림더 { opacity: 0.45; }
+.흐림작게 { color: var(--흐린글자); font-size: 12px; margin: 4px 0 10px; }
+.흐림가운데 { color: var(--흐린글자); text-align: center; font-size: 13px; margin: 4px 0; }
+.가운데 { text-align: center; font-size: 17px; }
+.초록 { color: var(--초록); }
+.주황 { color: var(--주황); }
+.빨강 { color: var(--빨강); }
+.막대 { font-family: ui-monospace, Menlo, monospace; letter-spacing: -1px; }
+
+/* 카드 · 목록 줄 */
+.카드 {
+  background: var(--칸바탕);
+  border: 1px solid var(--선);
+  border-radius: 14px;
+  padding: 14px;
+  margin: 12px 0;
+}
+.카드 h2 { margin: 0 0 6px; font-size: 17px; }
+.카드 p { margin: 6px 0; font-size: 14px; }
+
+.줄 {
+  border-bottom: 1px solid var(--선);
+  padding: 12px 4px;
+}
+.줄.누름 { cursor: pointer; }
+.줄.누름:active { background: var(--칸바탕); }
+.줄.급함 { border-left: 3px solid var(--주색); padding-left: 10px; }
+.줄제목 { font-size: 16px; }
+.줄설명 { font-size: 13px; color: var(--흐린글자); margin-top: 2px; }
+.줄점수 { font-size: 13px; font-weight: 700; margin-top: 3px; opacity: 0.9; }
+
+/* 단추 */
+button, .파일단추 {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 15px;
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid var(--주색);
+}
+.찬단추 { background: var(--주색); color: var(--주색글자); border-color: var(--주색); font-weight: 700; }
+.선단추 { background: transparent; color: var(--주색); }
+.뒤로 {
+  width: auto; margin: 0; padding: 8px 12px; font-size: 14px;
+  background: transparent; color: var(--주색); border-color: var(--선);
+}
+.뒤로가운데 {
+  width: auto; margin: 24px auto 0; padding: 10px 18px; font-size: 14px;
+  background: transparent; color: var(--흐린글자); border-color: var(--선);
+}
+button:disabled { cursor: default; }
+.파일단추 { border-color: var(--주색); color: var(--주색); }
+
+/* 문제 풀기 */
+.시계줄 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-top: env(safe-area-inset-top);
+}
+.진행 { font-size: 16px; font-weight: 700; }
+.문제시계 { margin-left: auto; font-size: 13px; }
+.전체시계 { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ── 문제집 지면처럼 (2026-08-06 사장님 요청) ──────────────────
+   책은 흰 종이에 검은 글씨, 왼쪽에 큼직한 문제번호, 발문은 굵게,
+   보기는 원문자 뒤에 내어쓰기로 가지런히 놓인다. 그 느낌을 옮긴 것. */
+.지면 {
+  background: var(--지면바탕);
+  color: var(--지면글자);
+  border: 1px solid var(--선);
+  border-radius: 10px;
+  padding: 18px 16px 14px;
+  margin: 10px 0 4px;
+}
+.문제머리 { display: flex; gap: 10px; align-items: flex-start; }
+.문제번호 {
+  flex: none;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.5px;
+  color: var(--지면글자);
+  opacity: 0.85;
+}
+.문제몸 { flex: 1; min-width: 0; }
+
+.발문 {
+  margin: 2px 0 0;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.62;
+  letter-spacing: -0.2px;
+}
+.발문 strong { font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+.회차 { margin: 6px 0 0; font-size: 12px; text-align: right; opacity: 0.6; }
+
+/* ㉠㉡㉢ 지문은 책처럼 네모 상자에 따로 */
+.지문상자 {
+  margin: 12px 0 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--선);
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.75;
+  background: var(--지문바탕);
+}
+
+.보기목록 { list-style: none; margin: 14px 0 0; padding: 0; }
+.보기목록 li { margin: 0; }
+
+.보기 {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 9px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--지면글자);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.6;
+  text-align: left;
+}
+.보기번호 { flex: none; font-weight: 600; }
+.보기글 { flex: 1; min-width: 0; }
+.보기:active { background: rgba(127, 127, 127, 0.14); }
+/* 채점 뒤: 책에 색연필로 표시한 느낌으로 왼쪽에 굵은 선 + 옅은 바탕 */
+.보기.정답 {
+  background: var(--정답바탕);
+  box-shadow: inset 3px 0 0 var(--초록);
+  font-weight: 700;
+}
+.보기.오답 {
+  background: var(--오답바탕);
+  box-shadow: inset 3px 0 0 var(--빨강);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+/* 건너뛰기: 실수로 누르지 않게 보기에서 한참 띄운다 */
+.넘김칸 { margin: 26px 0 6px; }
+.넘김단추 {
+  width: auto;
+  margin: 0 auto;
+  padding: 10px 20px;
+  font-size: 14px;
+  background: transparent;
+  color: var(--흐린글자);
+  border-color: var(--선);
+}
+.흐림작게가운데 {
+  color: var(--흐린글자);
+  font-size: 12px;
+  text-align: center;
+  margin: 0;
+}
+
+.판정 { font-weight: 700; margin: 18px 0 6px; }
+.해설 {
+  background: var(--칸바탕);
+  border: 1px solid var(--선);
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.큰점수 {
+  font-size: 46px;
+  font-weight: 800;
+  text-align: center;
+  margin: 14px 0 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.날짜칸 { margin: 16px 0; }
+.날짜칸 label { display: block; font-size: 14px; color: var(--흐린글자); }
+.날짜칸 input,
+.날짜칸 select {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 12px;
+  font: inherit;
+  color: var(--글자);
+  background: var(--바탕);
+  border: 1px solid var(--선);
+  border-radius: 12px;
+}
+
+.꼬리 { margin-top: 28px; font-size: 12px; color: var(--흐린글자); text-align: center; }
