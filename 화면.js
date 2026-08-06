@@ -339,7 +339,7 @@ function 문제그리기() {
 
     <article class="지면">
       <div class="문제머리">
-        <span class="문제번호">${String(현재번호 + 1).padStart(2, '0')}</span>
+        <span class="문제번호">${String(책번호(묶, 문제)).padStart(2, '0')}</span>
         <div class="문제몸">
           ${질문HTML(문제.질문)}
         </div>
