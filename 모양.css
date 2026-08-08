@@ -158,6 +158,40 @@ button:disabled { cursor: default; }
   padding: 18px 16px 14px;
   margin: 10px 0 4px;
 }
+/* 출처 머리글 — 책의 러닝헤드(쪽 위 작은 제목)처럼 발문 위에 얹는다
+   (2026-08-08 사장님 요청: 합격서 몇 쪽·어느 목차인지 먼저 보이게) */
+.출처머리 {
+  display: block;
+  margin: -2px 0 12px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--선);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: var(--지면글자);
+  opacity: 0.62;
+  text-decoration: none;
+}
+.출처머리.눌림 { cursor: pointer; }
+.출처머리.눌림:hover { opacity: 0.9; }
+.출처머리 .흐림 { font-weight: 500; }
+
+/* 몇 문제째인지 눈으로 보이게 (2026-08-08). 숫자만으로는 남은 양이 안 잡힌다. */
+.진행막대 {
+  height: 4px;
+  border-radius: 3px;
+  background: var(--칸바탕);
+  overflow: hidden;
+  margin: 2px 0 4px;
+}
+.진행막대 > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--주색);
+  transition: width 0.25s ease;
+}
+
 .문제머리 { display: flex; gap: 10px; align-items: flex-start; }
 .문제번호 {
   flex: none;
@@ -366,16 +400,19 @@ button:disabled { cursor: default; }
   padding-top: env(safe-area-inset-top);
   margin-bottom: 8px;
 }
-.합격서쪽말 { font-size: 13px; color: var(--흐린글자); }
+.합격서쪽말 { font-size: 13px; color: var(--흐린글자); flex: 1; min-width: 0; }
 .합격서쪽말 b { color: var(--글자); }
+.배율단추 { margin: 0; flex: none; width: auto; padding: 7px 12px; font-size: 13px; }
 
 .합격서판 {
   border: 1px solid var(--선);
   border-radius: 10px;
-  overflow: auto;          /* 넓은 쪽은 이 안에서만 옆으로 밀린다 */
+  overflow: auto;          /* 키운 쪽은 이 안에서만 옆으로 밀린다 */
+  -webkit-overflow-scrolling: touch;
   background: #fff;        /* 스캔 원본이 흰 종이라 어두운 화면에서도 흰 바탕 */
 }
-.합격서장 { display: block; width: 100%; height: auto; }
+/* 너비는 배율에 따라 인라인으로 정해진다(화면.js 합격서배율들) */
+.합격서장 { display: block; width: 100%; max-width: none; height: auto; }
 
 .쪽넘김 { display: flex; gap: 10px; margin: 12px 0 4px; }
 .쪽넘김 button { margin: 0; flex: 1; }
