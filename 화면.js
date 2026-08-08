@@ -96,6 +96,7 @@ function 그리기() {
   else if (화면 === '오답') 오답노트화면();
   else if (화면 === '오답풀기') 오답풀기화면();
   else if (화면 === '해설') 해설화면();
+  else if (화면 === '합격서') 값 ? 합격서쪽화면(값) : 합격서화면();
   else if (화면 === '리포트') 리포트화면();
   else if (화면 === '결과') 결과화면();
   else if (화면 === '계획') 계획화면();
@@ -130,6 +131,7 @@ function 집화면() {
         <button class="선단추" onclick="이동('계획')">🗓 그냥 풀자</button>
         <button class="선단추" onclick="이동('기록')">🔁 풀고 또 풀자</button>
         <button class="선단추" onclick="이동('오답')">📕 오답노트</button>
+        <button class="선단추" onclick="이동('합격서')">📗 합격서</button>
       </div>
     </header>
     ${조각.join('')}
@@ -548,6 +550,7 @@ function 답고르기(누른순번) {
       ${딴점수}점 <span class="흐림">${안전글(숙달안내(단원, 문제, 맞음, 걸린초))}</span>
     </div>
     <div class="해설">${안전글(문제.해설 || '(해설 없음)').replace(/\n/g, '<br>')}</div>
+    ${합격서단추HTML(단원)}
     <button class="선단추 담기단추" id="담기단추"></button>
     <button class="찬단추" id="다음단추">
       ${현재번호 === 풀이.낼것들.length - 1 ? '결과 보기' : '다음 문제'}
@@ -717,7 +720,8 @@ function 결과화면() {
   // 해설을 쭉 읽고 넘어가는 길. 다시 푸는 복습 말고 이걸 먼저 권한다
   // (2026-08-06 사장님 요청: 탄탄하게 학습할 수 있게)
   const 해설단추 = `<button class="찬단추" onclick="이동('해설')">
-    📖 해설 다시 보기 (${ㄱ.문제수}문제)</button>`;
+    📖 해설 다시 보기 (${ㄱ.문제수}문제)</button>`
+    + (묶 ? 합격서단추HTML(묶.단원) : '');
 
   if (ㄱ.연습) {
     뿌리.innerHTML = `
@@ -984,6 +988,117 @@ function 해설화면() {
     ${몸}
     <button class="선단추" onclick="이동('결과')">결과로 돌아가기</button>
     <button class="선단추" onclick="이동('집')">목록으로</button>
+  `;
+}
+
+// ── 합격서 (2026-08-08 사장님 요청) ──────────────────────────
+// 스캔한 책 쪽을 그대로 넘겨 보는 화면. 글자를 뽑아낼 수 없는 스캔본이라
+// 쪽 그림을 그대로 싣고, 차례와 쪽번호로만 길을 잡는다.
+// 문제를 푼 뒤 해당 대목을 바로 펼 수 있게 단원↔쪽 매칭표를 함께 들고 있다.
+
+const 합격서 = window.합격서 || { 있는쪽: [], 꼭지들: [], 매칭: {}, 첫쪽: 0, 끝쪽: 0 };
+const 합격서있는쪽 = new Set(합격서.있는쪽);
+const 합격서쪽주소 = (쪽) => `합격서/${쪽}`;
+
+/** 이 단원에 해당하는 합격서 쪽 범위 (없으면 null) */
+function 합격서범위(단원) {
+  const 칸 = 합격서.매칭[`${단원.과목}|${단원.이름}`];
+  if (!칸) return null;
+  const [처음, 끝] = 칸;
+  const 있는 = [];
+  for (let ㄴ = 처음; ㄴ <= 끝; ㄴ++) if (합격서있는쪽.has(ㄴ)) 있는.push(ㄴ);
+  return { 처음, 끝, 있는 };
+}
+
+/** 차례에서 이 쪽이 어느 꼭지에 드는지 */
+const 합격서꼭지 = (쪽) =>
+  합격서.꼭지들.find((ㄱ) => 쪽 >= ㄱ.시작 && 쪽 <= ㄱ.끝) || null;
+
+// ── 합격서 차례 화면 ────────────────────────────────────────
+function 합격서화면() {
+  if (!합격서.있는쪽.length) {
+    뿌리.innerHTML = `<header class="머리">
+        <button class="뒤로" onclick="이동('집')">← 목록</button>
+        <h1>📗 합격서</h1></header>
+      <p class="흐림">합격서 쪽이 들어 있지 않습니다.</p>`;
+    return;
+  }
+
+  const 조각 = [`<header class="머리">
+      <button class="뒤로" onclick="이동('집')">← 목록</button>
+      <h1>📗 합격서</h1>
+    </header>
+    <p class="흐림">책 차례 그대로입니다. 꼭지를 누르면 그 쪽부터 펼칩니다.<br>
+      p${합격서.첫쪽}~${합격서.끝쪽} 중 ${합격서.있는쪽.length}쪽이 들어 있습니다.</p>`];
+
+  let 앞파트 = '';
+  합격서.꼭지들.forEach((ㄱ) => {
+    if (ㄱ.파트 !== 앞파트) {
+      앞파트 = ㄱ.파트;
+      조각.push(`<h2 class="부제목">${안전글(ㄱ.파트)}</h2>`);
+    }
+    const 쪽수 = ㄱ.끝 - ㄱ.시작 + 1;
+    const 있는 = [];
+    for (let ㄴ = ㄱ.시작; ㄴ <= ㄱ.끝; ㄴ++) if (합격서있는쪽.has(ㄴ)) 있는.push(ㄴ);
+    const 없음 = 쪽수 - 있는.length;
+
+    if (!있는.length) {
+      조각.push(`<div class="줄 흐림더">
+        <div class="줄제목">${안전글(ㄱ.이름)}</div>
+        <div class="줄설명">p${ㄱ.시작}~${ㄱ.끝} · 아직 안 들어옴</div>
+      </div>`);
+      return;
+    }
+    조각.push(`<div class="줄 누름" onclick="이동('${합격서쪽주소(있는[0])}')">
+      <div class="줄제목">${안전글(ㄱ.이름)}</div>
+      <div class="줄설명">p${ㄱ.시작}~${ㄱ.끝} · ${있는.length}쪽
+        ${없음 ? `<span class="주황">(${없음}쪽 빠짐)</span>` : ''}</div>
+    </div>`);
+  });
+
+  뿌리.innerHTML = 조각.join('');
+}
+
+/**
+ * 문제를 푼 뒤 "이 대목을 합격서에서 보기" 단추.
+ * 매칭표에 없거나 그 쪽이 아직 안 들어왔으면 아무것도 그리지 않는다.
+ */
+function 합격서단추HTML(단원) {
+  const 칸 = 합격서범위(단원);
+  if (!칸 || !칸.있는.length) return '';
+  const 꼭지 = 합격서꼭지(칸.있는[0]);
+  return `<button class="선단추 합격서단추" onclick="이동('${합격서쪽주소(칸.있는[0])}')">
+    📗 합격서에서 이 대목 보기 —
+    ${꼭지 ? 안전글(꼭지.이름) : `p${칸.처음}~${칸.끝}`}
+  </button>`;
+}
+
+// ── 합격서 쪽 보기 ──────────────────────────────────────────
+function 합격서쪽화면(쪽글) {
+  const 쪽 = Number(쪽글);
+  if (!합격서있는쪽.has(쪽)) return 이동('합격서');
+  const 차례 = 합격서.있는쪽.indexOf(쪽);
+  const 앞 = 합격서.있는쪽[차례 - 1];
+  const 뒤 = 합격서.있는쪽[차례 + 1];
+  const 꼭지 = 합격서꼭지(쪽);
+
+  뿌리.innerHTML = `
+    <div class="합격서머리">
+      <button class="뒤로" onclick="이동('합격서')">← 차례</button>
+      <span class="합격서쪽말">${꼭지 ? 안전글(꼭지.이름) : ''} <b>p${쪽}</b></span>
+    </div>
+    <div class="합격서판">
+      <img class="합격서장" src="합격서/p${String(쪽).padStart(3, '0')}.jpg"
+           alt="합격서 ${쪽}쪽" loading="eager">
+    </div>
+    <div class="쪽넘김">
+      ${앞 ? `<button class="선단추" onclick="이동('${합격서쪽주소(앞)}')">← p${앞}</button>`
+           : '<span></span>'}
+      ${뒤 ? `<button class="선단추" onclick="이동('${합격서쪽주소(뒤)}')">p${뒤} →</button>`
+           : '<span></span>'}
+    </div>
+    <p class="흐림작게가운데">그림을 두 손가락으로 벌리면 크게 볼 수 있습니다.</p>
+    <button class="뒤로가운데" onclick="이동('집')">목록으로</button>
   `;
 }
 

@@ -355,3 +355,30 @@ button:disabled { cursor: default; }
 .해설보기.오답 { background: var(--오답바탕); box-shadow: inset 3px 0 0 var(--빨강); }
 
 .담기단추.담김 { background: var(--칸바탕); font-weight: 700; }
+
+/* ── 합격서 (2026-08-08 사장님 요청) ─────────────────────────
+   스캔한 책 쪽을 그대로 넘겨 본다. 글자를 뽑을 수 없는 스캔본이라
+   그림 한 장을 통째로 싣고, 손가락으로 벌려 키워 보게 둔다. */
+.합격서머리 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: env(safe-area-inset-top);
+  margin-bottom: 8px;
+}
+.합격서쪽말 { font-size: 13px; color: var(--흐린글자); }
+.합격서쪽말 b { color: var(--글자); }
+
+.합격서판 {
+  border: 1px solid var(--선);
+  border-radius: 10px;
+  overflow: auto;          /* 넓은 쪽은 이 안에서만 옆으로 밀린다 */
+  background: #fff;        /* 스캔 원본이 흰 종이라 어두운 화면에서도 흰 바탕 */
+}
+.합격서장 { display: block; width: 100%; height: auto; }
+
+.쪽넘김 { display: flex; gap: 10px; margin: 12px 0 4px; }
+.쪽넘김 button { margin: 0; flex: 1; }
+.쪽넘김 span { flex: 1; }
+
+.합격서단추 { font-weight: 600; }
