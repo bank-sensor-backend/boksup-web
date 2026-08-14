@@ -103,6 +103,7 @@ function 그리기() {
   else if (화면 === '결과') 결과화면();
   else if (화면 === '계획') 계획화면();
   else if (화면 === '기록') 기록화면();
+  else if (화면 === '계정') 계정화면();
   else 집화면();
 }
 
@@ -139,6 +140,7 @@ function 집화면() {
         <button class="선단추" onclick="이동('기록')">🔁 풀고 또 풀자</button>
         <button class="선단추" onclick="이동('오답')">📕 오답노트</button>
         <button class="선단추" onclick="이동('합격서')">📗 합격서</button>
+        <button class="선단추" onclick="이동('계정')">${동기화.로그인했나() ? '🔗 동기화' : '🔑 로그인'}</button>
       </div>
     </header>
     ${조각.join('')}
@@ -708,6 +710,7 @@ function 마무리() {
       평균, 회차: 0, 남은수: 0, 오답번호들, 푼내용,
     };
     풀이 = null;
+    저절로맞추기();
     return 이동('결과');
   }
 
@@ -740,6 +743,8 @@ function 마무리() {
   };
   풀이 = null;
   이동('결과');
+  // 섹션을 마쳤으니 이때 맞춘다(문제를 푸는 중이 아니라 안전한 시점이다)
+  저절로맞추기();
 }
 
 // ── 결과 ────────────────────────────────────────────────────
@@ -1411,10 +1416,157 @@ function 기록가져오기(사건) {
 }
 
 // ── 시작 ────────────────────────────────────────────────────
-그리기();
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch((오류) =>
     console.warn('오프라인 준비 실패', 오류)
   );
 }
+
+// ── 계정 동기화 화면 (2026-08-08 사장님 요청) ────────────────
+// 아이디+비밀번호로 로그인해 두면 앱과 웹이 같은 기록을 봅니다.
+// 합치는 규칙은 서버에만 있고(핵심.js 동기화 주석 참고) 여기서는 부르기만 합니다.
+
+let 맞추는중 = false;
+
+function 맞춘때말(밀리) {
+  if (!밀리) return '아직 맞춘 적이 없습니다';
+  const 지난초 = Math.floor((Date.now() - 밀리) / 1000);
+  if (지난초 < 60) return '조금 전에 맞췄습니다';
+  if (지난초 < 3600) return `${Math.floor(지난초 / 60)}분 전에 맞췄습니다`;
+  return `${일시말(밀리)}에 맞췄습니다`;
+}
+
+function 계정화면() {
+  const 조각 = [`<header class="머리">
+      <button class="뒤로" onclick="이동('집')">← 목록</button>
+      <h1>앱과 맞추기</h1></header>`];
+
+  if (동기화.로그인했나()) {
+    조각.push(`
+      <section class="카드">
+        <p><b>${안전글(동기화.아이디())}</b>로 로그인되어 있습니다.</p>
+        <p class="흐림">${맞춘때말(동기화.맞춘때())}</p>
+        <p class="흐림">앱에서도 같은 아이디로 로그인하시면 기록이 서로 오갑니다.
+          첫 화면을 열 때와 섹션을 마칠 때 저절로 맞춰집니다.</p>
+      </section>
+      <button class="찬단추" id="맞추기단추">지금 맞추기</button>
+      <button class="선단추" id="나가기단추">이 기기에서 로그아웃</button>
+      <p class="흐림작게가운데">로그아웃해도 이 기기의 기록은 지워지지 않습니다.</p>`);
+  } else {
+    조각.push(`
+      <p class="흐림">아이디와 비밀번호를 정해 두시면, 폰 앱에서 푼 것과 여기서 푼 것이
+        하나로 합쳐집니다. 담기는 것은 학습 기록뿐이고 이름·연락처는 담지 않습니다.</p>
+      <section class="카드">
+        <label class="칸이름">아이디
+          <input id="아이디칸" class="글칸" autocomplete="username"
+                 placeholder="영문·숫자·밑줄 4~20자" inputmode="latin">
+        </label>
+        <label class="칸이름">비밀번호
+          <input id="비번칸" class="글칸" type="password" autocomplete="current-password"
+                 placeholder="8자 이상">
+        </label>
+        <p class="흐림작게" id="계정알림"></p>
+        <button class="찬단추" id="로그인단추">로그인</button>
+        <button class="선단추" id="가입단추">처음이에요 (아이디 만들기)</button>
+      </section>
+      <p class="흐림작게가운데">비밀번호는 서버에도 알아볼 수 없는 형태로만 담깁니다.</p>`);
+  }
+
+  뿌리.innerHTML = 조각.join('');
+  계정단추붙이기();
+}
+
+function 계정알림(글, 빛 = '흐림작게') {
+  const 칸 = document.getElementById('계정알림');
+  if (칸) {
+    칸.textContent = 글;
+    칸.className = 빛;
+  }
+}
+
+function 계정단추붙이기() {
+  const 로그인 = document.getElementById('로그인단추');
+  const 가입 = document.getElementById('가입단추');
+  const 맞추기 = document.getElementById('맞추기단추');
+  const 나가기 = document.getElementById('나가기단추');
+
+  const 해보기 = async (단추, 하기, 하는중글) => {
+    const 아이디 = document.getElementById('아이디칸')?.value.trim() ?? '';
+    const 비번 = document.getElementById('비번칸')?.value ?? '';
+    if (!아이디 || !비번) return 계정알림('아이디와 비밀번호를 적어 주세요', '빨강');
+    단추.disabled = true;
+    계정알림(`${하는중글} (서버가 자고 있으면 30초쯤 걸립니다)`);
+    try {
+      await 하기(아이디, 비번);
+      계정알림('기록을 맞추는 중입니다…');
+      await 동기화.맞추기();
+      alert('맞췄습니다. 앱에서도 같은 아이디로 로그인하시면 됩니다.');
+      계정화면();
+    } catch (오류) {
+      계정알림(오류.message || '잘 되지 않았습니다', '빨강');
+      단추.disabled = false;
+    }
+  };
+
+  if (로그인) 로그인.addEventListener('click', () => 해보기(로그인, 동기화.로그인, '로그인하는 중'));
+  if (가입) 가입.addEventListener('click', () => 해보기(가입, 동기화.가입, '아이디를 만드는 중'));
+
+  if (맞추기) {
+    맞추기.addEventListener('click', async () => {
+      맞추기.disabled = true;
+      맞추기.textContent = '맞추는 중… (서버가 자고 있으면 30초쯤)';
+      try {
+        await 동기화.맞추기();
+        계정화면();
+      } catch (오류) {
+        alert(오류.message || '맞추지 못했습니다');
+        맞추기.disabled = false;
+        맞추기.textContent = '지금 맞추기';
+      }
+    });
+  }
+
+  if (나가기) {
+    나가기.addEventListener('click', async () => {
+      if (!confirm('이 기기에서 로그아웃할까요?\n기록은 그대로 남습니다.')) return;
+      await 동기화.나가기();
+      계정화면();
+    });
+  }
+}
+
+// 화면으로 돌아왔을 때도 맞춥니다. 탭을 켜 둔 채 폰으로 풀고 다시 이 탭을 보면
+// 새로 고치지 않는 한 옛 기록이 그대로 서 있게 되기 때문입니다(2026-08-08).
+// 너무 자주 두드리지 않게 30초에 한 번으로 묶습니다.
+const 다시맞출쉼 = 30 * 1000;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  if (Date.now() - 동기화.맞춘때() < 다시맞출쉼) return;
+  저절로맞추기();
+});
+
+/**
+ * 저절로 맞추기. 문제를 푸는 중에는 부르지 않습니다 — 보내고 받는 사이에 푼 것이
+ * 덮일 수 있어서, 아무것도 진행 중이 아닐 때만 부릅니다.
+ * 인터넷이 없거나 서버가 자고 있으면 조용히 넘어갑니다.
+ */
+async function 저절로맞추기() {
+  if (맞추는중 || 풀이 || !동기화.로그인했나()) return;
+  맞추는중 = true;
+  try {
+    const 됐나 = await 동기화.살짝맞추기();
+    // 화면에 이미 옛 자료가 그려져 있으므로 다시 그린다
+    if (됐나) 그리기();
+  } finally {
+    맞추는중 = false;
+  }
+}
+
+// ── 여기서 시작한다 ─────────────────────────────────────────
+// **반드시 파일 맨 끝**에 둔다. 위에 두면 아래에서 let/const로 선언한 것을
+// 초기화 전에 읽어 TDZ 오류가 나고, 화면이 통째로 안 뜬다
+// (2026-08-08 '맞추는중'을 아래에 선언했다가 실제로 터졌다).
+그리기();
+// 앱을 열 때 한 번 맞춘다(로그인해 두었을 때만, 안 되면 조용히 넘어간다)
+저절로맞추기();

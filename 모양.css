@@ -357,6 +357,20 @@ button:disabled { cursor: default; }
   border-radius: 12px;
 }
 
+/* 로그인 칸 (2026-08-08 계정 동기화) — 날짜칸과 같은 생김새를 쓴다 */
+.칸이름 { display: block; margin: 12px 0; font-size: 14px; color: var(--흐린글자); }
+.글칸 {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 12px;
+  font: inherit;
+  color: var(--글자);
+  background: var(--바탕);
+  border: 1px solid var(--선);
+  border-radius: 12px;
+}
+
 .꼬리 { margin-top: 28px; font-size: 12px; color: var(--흐린글자); text-align: center; }
 
 /* ── 리포트 · 오답노트 · 해설 다시 보기 (2026-08-06 사장님 요청) ── */
