@@ -1459,12 +1459,13 @@ function 계정화면() {
         하나로 합쳐집니다. 담기는 것은 학습 기록뿐이고 이름·연락처는 담지 않습니다.</p>
       <section class="카드">
         <label class="칸이름">아이디
-          <input id="아이디칸" class="글칸" autocomplete="username"
-                 placeholder="영문·숫자·밑줄 4~20자" inputmode="latin">
+          <input id="아이디칸" class="글칸" autocomplete="username" inputmode="latin"
+                 placeholder="알파벳 소문자 2~12자"
+                 autocapitalize="off" autocorrect="off" spellcheck="false">
         </label>
         <label class="칸이름">비밀번호
           <input id="비번칸" class="글칸" type="password" autocomplete="current-password"
-                 placeholder="8자 이상">
+                 placeholder="4~20자">
         </label>
         <p class="흐림작게" id="계정알림"></p>
         <button class="찬단추" id="로그인단추">로그인</button>
@@ -1492,7 +1493,8 @@ function 계정단추붙이기() {
   const 나가기 = document.getElementById('나가기단추');
 
   const 해보기 = async (단추, 하기, 하는중글) => {
-    const 아이디 = document.getElementById('아이디칸')?.value.trim() ?? '';
+    // 소문자로 내려서 보냅니다 — 폰 자판이 첫 글자를 저절로 대문자로 올립니다.
+    const 아이디 = (document.getElementById('아이디칸')?.value ?? '').trim().toLowerCase();
     const 비번 = document.getElementById('비번칸')?.value ?? '';
     if (!아이디 || !비번) return 계정알림('아이디와 비밀번호를 적어 주세요', '빨강');
     단추.disabled = true;
