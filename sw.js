@@ -9,6 +9,8 @@ const 담을것 = [
   './index.html',
   './모양.css',
   './데이터.js',
+  './OX데이터.js',   // OX 풀기 지문 (2026-09-10)
+  './합격서.js',
   './핵심.js',
   './화면.js',
   './manifest.webmanifest',

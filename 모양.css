@@ -433,3 +433,76 @@ button:disabled { cursor: default; }
 .쪽넘김 span { flex: 1; }
 
 .합격서단추 { font-weight: 600; }
+
+/* ── 모드 선택 (2026-09-10 사장님 지시) ─────────────────────────
+   처음 열면 '문제 풀기'와 'OX 풀기' 중 하나를 고른다. 카드 둘을 크게, 마지막에 쓴 쪽을 도드라지게. */
+.모드카드 {
+  display: block;
+  width: 100%;
+  margin: 12px 0;
+  padding: 18px 16px 16px;
+  text-align: left;
+  border: 1px solid var(--선);
+  border-radius: 16px;
+  background: var(--칸바탕);
+  color: var(--글자);
+}
+.모드카드.마지막 { border-color: var(--주색); box-shadow: inset 0 0 0 1px var(--주색); }
+.모드카드:active { transform: scale(0.99); }
+.모드이름 { display: block; font-size: 21px; font-weight: 800; letter-spacing: -0.3px; }
+.모드설명 { display: block; margin-top: 4px; font-size: 14px; color: var(--흐린글자); }
+.모드현황 { display: block; margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--주색); }
+
+/* ── OX 풀기 (2026-09-10) ──────────────────────────────────────
+   지문 하나를 크게, 아래에 O·X 단추 둘을 엄지가 닿는 크기로. 점수·시계는 없다. */
+.OX과목줄 { display: flex; align-items: center; gap: 8px; }
+.OX과목줄 .작은단추 { margin: 0 0 0 auto; }
+.OX설정줄 { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; font-size: 14px; color: var(--흐린글자); }
+.OX설정줄 input { width: 18px; height: 18px; margin: 0; accent-color: var(--주색); }
+
+.OX지면 { min-height: 150px; }
+.OX지면.맞음 { border-color: var(--초록); box-shadow: inset 4px 0 0 var(--초록); }
+.OX지면.틀림 { border-color: var(--빨강); box-shadow: inset 4px 0 0 var(--빨강); }
+.OX맥락 {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--지문바탕);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--지면글자);
+  opacity: 0.9;
+}
+.OX물음 { margin: 0 0 6px; font-size: 14px; font-weight: 700; color: var(--주색); }
+.OX지문글 {
+  margin: 4px 0 0;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.65;
+  letter-spacing: -0.2px;
+  color: var(--지면글자);
+}
+.OX판정 { margin: 14px 0 0; font-size: 16px; font-weight: 800; }
+
+.OX단추들 { display: flex; gap: 12px; margin: 14px 0 4px; }
+.OX단추 {
+  flex: 1;
+  margin: 0;
+  padding: 18px 0 14px;
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+  border-radius: 16px;
+  border: 2px solid var(--선);
+  background: var(--칸바탕);
+  color: var(--글자);
+}
+.OX단추 small { display: block; margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--흐린글자); }
+.OX단추.동그라미 { border-color: var(--초록); color: var(--초록); }
+.OX단추.엑스 { border-color: var(--빨강); color: var(--빨강); }
+.OX단추:active { transform: scale(0.97); }
+
+.OX해설 { margin-top: 12px; }
+.OX해설 p { margin: 4px 0; }
+.OX해설 details { margin-top: 6px; }
+.OX해설 summary { cursor: pointer; color: var(--주색); font-size: 13px; }

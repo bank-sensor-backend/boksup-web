@@ -82,18 +82,22 @@ function 이동(주소) {
 }
 
 function 그리기() {
-  // location.hash는 한글을 %EA%B3%84... 로 돌려주므로 풀어서 봐야 한다
-  let 길 = '집';
+  // location.hash는 한글을 %EA%B3%84... 로 돌려주므로 풀어서 봐야 한다.
+  // 주소가 비어 있으면(처음 열었을 때) 어느 방식으로 공부할지 고르는 화면 (2026-09-10 사장님 지시)
+  let 길 = '모드';
   try {
-    길 = decodeURIComponent(location.hash.slice(1)) || '집';
+    길 = decodeURIComponent(location.hash.slice(1)) || '모드';
   } catch (오류) {
-    길 = '집';
+    길 = '모드';
   }
   const 자리 = 길.indexOf('/');
   const 화면 = 자리 < 0 ? 길 : 길.slice(0, 자리);
   const 값 = 자리 < 0 ? '' : 길.slice(자리 + 1);
   window.scrollTo(0, 0);
-  if (화면 === '묶음') 묶음목록화면(값);
+  if (화면 === '모드') 모드화면();
+  else if (화면 === 'ox') OX홈화면();
+  else if (화면 === 'ox풀기') OX풀기화면(값);
+  else if (화면 === '묶음') 묶음목록화면(값);
   else if (화면 === '풀기') 풀기화면(값);
   else if (화면 === '오답') 오답노트화면();
   else if (화면 === '오답풀기') 오답풀기화면();
@@ -134,8 +138,9 @@ function 집화면() {
 
   뿌리.innerHTML = `
     <header class="머리">
-      <h1>중개사 복습</h1>
+      <h1>📘 문제 풀기</h1>
       <div class="머리단추">
+        <button class="선단추" onclick="이동('ox')">⭕ OX 풀기</button>
         <button class="선단추" onclick="이동('계획')">🗓 그냥 풀자</button>
         <button class="선단추" onclick="이동('기록')">🔁 풀고 또 풀자</button>
         <button class="선단추" onclick="이동('오답')">📕 오답노트</button>
@@ -1538,6 +1543,271 @@ function 계정단추붙이기() {
   }
 }
 
+// ── 모드 선택 (2026-09-10 사장님 지시) ────────────────────────
+// 처음 열면 '문제 풀기'(문제집 5지선다·점수·복습 일정)와 'OX 풀기'(지문 O/X·점수 없음)
+// 중에서 고른다. 두 방식은 기록도 화면도 따로 굴러가고, 서로 오갈 수 있다.
+function 모드화면() {
+  const 마지막 = localStorage.getItem(저장키.모드) || '';
+  const 현 = 현황계산(진도묶음, 전체묶음);
+  const ox현 = OX.현황('전체');
+  const 문제현황 = 현.계획
+    ? `${현.계획.회독}회독 ${현.푼묶음수}/${현.전체묶음수}섹션 · 오늘 할 일 ${현.오늘할일들.length}섹션`
+    : `전체 ${현.전체문제수}문제 · ${현.전체묶음수}섹션`;
+  const ox현황 = ox현.전체
+    ? `${ox현.바퀴.회}바퀴 ${ox현.푼}/${ox현.전체}지문${ox현.틀린 ? ` · 틀린 지문 ${ox현.틀린}개` : ''}`
+    : '지문 자료가 없습니다';
+
+  뿌리.innerHTML = `
+    <header class="머리">
+      <h1>중개사 복습</h1>
+      <div class="머리단추">
+        <button class="선단추" onclick="이동('계정')">${동기화.로그인했나() ? '🔗 동기화' : '🔑 로그인'}</button>
+      </div>
+    </header>
+    <p class="흐림">오늘은 어떤 방식으로 공부할까요?</p>
+    <button class="모드카드 ${마지막 === '문제' ? '마지막' : ''}" onclick="모드고르기('문제')">
+      <span class="모드이름">📘 문제 풀기</span>
+      <span class="모드설명">문제집 그대로 5지선다 · 점수와 복습 일정</span>
+      <span class="모드현황">${안전글(문제현황)}</span>
+    </button>
+    <button class="모드카드 ${마지막 === 'ox' ? '마지막' : ''}" onclick="모드고르기('ox')">
+      <span class="모드이름">⭕ OX 풀기</span>
+      <span class="모드설명">지문 하나하나를 O·X로 · 점수 없이 계속</span>
+      <span class="모드현황">${안전글(ox현황)}</span>
+    </button>
+    ${마지막? `<p class="흐림작게가운데">마지막에는 ${마지막 === 'ox' ? 'OX 풀기' : '문제 풀기'}를 하셨습니다</p>` : ''}
+  `;
+}
+function 모드고르기(모드) {
+  localStorage.setItem(저장키.모드, 모드);
+  이동(모드 === 'ox' ? 'ox' : '집');
+}
+
+// ── OX 풀기 (2026-09-10 사장님 지시) ─────────────────────────
+// 규칙(무엇을 '이번 바퀴에 푼 것'으로 보나 등)은 전부 핵심.js OX 에 있고 여기서는 그리기만 한다.
+
+// 주소에 쓰는 짧은 범위 코드 ↔ 핵심.js 범위키. 주소에 '|'와 한글 이름을 그대로 넣지 않으려고.
+function OX범위키풀기(코드) {
+  if (코드 === '전체' || 코드 === '틀린') return 코드;
+  if (코드.startsWith('p')) {
+    const 과목 = OX.과목들()[Number(코드.slice(1))];
+    return 과목 ? `과목:${과목}` : null;
+  }
+  if (코드.startsWith('u')) {
+    const 단원 = OX.단원들()[Number(코드.slice(1))];
+    return 단원 ? OX.단원범위키(단원) : null;
+  }
+  return null;
+}
+function OX범위코드(범위키) {
+  if (범위키 === '전체' || 범위키 === '틀린') return 범위키;
+  if (범위키.startsWith('과목:')) return `p${OX.과목들().indexOf(범위키.slice(3))}`;
+  const 순번 = OX.단원들().findIndex((단원) => OX.단원범위키(단원) === 범위키);
+  return `u${순번}`;
+}
+
+function OX홈화면() {
+  const 전체현 = OX.현황('전체');
+  const 설정 = OX.설정();
+  const 조각 = [];
+
+  조각.push(`
+    <header class="머리">
+      <h1>⭕ OX 풀기</h1>
+      <div class="머리단추">
+        <button class="선단추" onclick="이동('집')">📘 문제 풀기</button>
+        <button class="선단추" onclick="이동('계정')">${동기화.로그인했나() ? '🔗 동기화' : '🔑 로그인'}</button>
+      </div>
+    </header>`);
+
+  if (!전체현.전체) {
+    조각.push('<p class="흐림">지문 자료가 없습니다.</p>');
+    뿌리.innerHTML = 조각.join('');
+    return;
+  }
+
+  const 제목 = 전체현.남은
+    ? `${전체현.바퀴.회}바퀴 — 남은 지문 ${전체현.남은}개`
+    : `${전체현.바퀴.회}바퀴를 다 돌았습니다 🎉`;
+  조각.push(`
+    <section class="카드">
+      <h2>${제목}</h2>
+      <p class="흐림">
+        <span class="막대">${막대(전체현.진행률)}</span> ${전체현.푼}/${전체현.전체}지문 (${전체현.진행률}%)
+        ${전체현.정답률 !== null ? `<br>정답률 ${전체현.정답률}%` : ''}
+        ${전체현.틀린 ? ` · 틀린 채로 남은 지문 ${전체현.틀린}개` : ''}
+      </p>
+      ${전체현.남은
+        ? `<button class="찬단추" onclick="이동('ox풀기/전체')">이어서 풀기 (전체)</button>`
+        : `<button class="찬단추" id="OX다음바퀴단추">${전체현.바퀴.회 + 1}바퀴 시작 (전체)</button>`}
+      ${전체현.틀린 ? `<button class="선단추" onclick="이동('ox풀기/틀린')">❌ 틀린 지문만 다시 (${전체현.틀린})</button>` : ''}
+      <label class="OX설정줄"><input type="checkbox" id="OX섞기" ${설정.섞기 ? 'checked' : ''}> 섞어서 내기 (끄면 책 순서)</label>
+    </section>`);
+
+  OX.단원들().forEach((단원, 순번) => {
+    const 앞 = OX.단원들()[순번 - 1];
+    if (!앞 || 앞.과목 !== 단원.과목) {
+      const 과목현 = OX.현황(`과목:${단원.과목}`);
+      조각.push(`<h2 class="부제목 OX과목줄">${안전글(단원.과목)}
+        <span class="흐림">${과목현.푼}/${과목현.전체}</span>
+        <button class="작은단추 선단추" onclick="이동('ox풀기/p${OX.과목들().indexOf(단원.과목)}')">이 PART 풀기</button></h2>`);
+    }
+    const 현 = OX.현황(OX.단원범위키(단원));
+    const 설명 = [
+      `${현.전체}지문`,
+      현.남은 ? `이번 바퀴 ${현.푼}/${현.전체}` : `${현.바퀴.회}바퀴 완료 ✅`,
+      현.정답률 !== null ? `정답률 ${현.정답률}%` : '',
+      현.틀린 ? `틀린 ${현.틀린}` : '',
+    ].filter(Boolean).join(' · ');
+    조각.push(`<div class="줄 누름" onclick="이동('ox풀기/u${순번}')">
+      <div class="줄제목">${안전글(단원.이름)}</div>
+      <div class="줄설명">${설명}</div>
+    </div>`);
+  });
+  조각.push(`<p class="꼬리">전체 ${전체현.전체}지문 · 점수는 매기지 않습니다</p>`);
+
+  뿌리.innerHTML = 조각.join('');
+  document.getElementById('OX섞기')?.addEventListener('change', (event) => {
+    OX.설정바꾸기({ 섞기: event.target.checked });
+  });
+  document.getElementById('OX다음바퀴단추')?.addEventListener('click', () => OX다음바퀴('전체'));
+}
+
+function OX다음바퀴(범위키) {
+  OX.다음바퀴(범위키);
+  OX풀이 = null;
+  이동(`ox풀기/${OX범위코드(범위키)}`);
+}
+
+let OX풀이 = null;   // { 범위키, 지문들, 현재, 맞은, 틀린, 답, 끝 }
+
+function OX풀기화면(코드) {
+  const 범위키 = OX범위키풀기(코드);
+  if (!범위키) return 이동('ox');
+  // 같은 범위를 새로 고친 것이면 이어서, 다른 범위거나 끝났으면 새로 시작한다
+  if (!OX풀이 || OX풀이.범위키 !== 범위키 || OX풀이.끝) {
+    const 지문들 = OX.다음지문들(범위키, OX.설정().섞기);
+    if (!지문들.length) return OX바퀴끝화면(범위키, null);
+    OX풀이 = { 범위키, 지문들, 현재: 0, 맞은: 0, 틀린: 0, 답: null, 끝: false };
+  }
+  OX지문그리기();
+}
+
+function OX지문그리기() {
+  const { 지문들, 현재, 답, 범위키 } = OX풀이;
+  const 지문 = 지문들[현재];
+  const 문 = 지문.원문제;
+  const 낸뒤 = 답 !== null;
+  const 맞음 = 낸뒤 && 답 === 지문.정답;
+  const 바퀴 = OX.바퀴(범위키);
+  // "PART 1 · 02 법률행위 · 36회" — 과목 이름의 부제(· 민법총칙)는 줄여서 한 줄에 들어가게
+  const 출처 = [지문.단원.과목.replace(/\s*·.*$/, ''), 지문.단원.이름, 문.출처].filter(Boolean).join(' · ');
+  const 안내 = 지문.물음 ? '위 물음에 해당하면 O, 아니면 X' : '옳은 설명이면 O, 틀린 설명이면 X';
+  const 마지막인가 = 현재 + 1 >= 지문들.length;
+
+  뿌리.innerHTML = `
+    <div class="시계줄">
+      <span class="진행">${현재 + 1} / ${지문들.length}</span>
+      <span class="점수힌트 흐림">${안전글(OX.범위이름(범위키))}${범위키 === '틀린' ? '' : ` · ${바퀴.회}바퀴`}</span>
+    </div>
+    <div class="진행막대"><span style="width:${(현재 / 지문들.length) * 100}%"></span></div>
+
+    <article class="지면 OX지면 ${낸뒤 ? (맞음 ? '맞음' : '틀림') : ''}">
+      <span class="출처머리">${안전글(출처)}</span>
+      ${문.맥락 ? `<p class="OX맥락">${안전글(문.맥락)}</p>` : ''}
+      ${지문.물음 ? `<p class="OX물음">${안전글(지문.물음)}</p>` : ''}
+      <p class="OX지문글">${안전글(지문.글)}</p>
+      ${낸뒤 ? `<p class="OX판정 ${맞음 ? '초록' : '빨강'}">${맞음 ? '⭕ 맞았습니다' : '❌ 틀렸습니다'} — 정답은 ${지문.정답}</p>` : ''}
+    </article>
+
+    ${!낸뒤 ? `
+      <div class="OX단추들">
+        <button class="OX단추 동그라미" onclick="OX답하기('O')">O<small>${지문.물음 ? '그렇다' : '맞다'}</small></button>
+        <button class="OX단추 엑스" onclick="OX답하기('X')">X<small>${지문.물음 ? '아니다' : '틀리다'}</small></button>
+      </div>
+      <p class="누름안내">${안내} · 자판 O / X 로도 됩니다</p>`
+    : `
+      <section class="해설 OX해설">
+        ${지문.해설핵심 ? `<p><b>${안전글(지문.해설핵심)}</b></p>` : ''}
+        ${문.해설 && 문.해설 !== 지문.해설핵심
+          ? `<details ${지문.해설핵심 ? '' : 'open'}><summary>해설 전체</summary><p>${안전글(문.해설)}</p></details>` : ''}
+        ${문.발문 ? `<p class="흐림작게">원 문제: ${안전글(문.발문)}${지문.원번호 ? ` — ${번호표[지문.원번호 - 1] || 지문.원번호}` : ''}</p>` : ''}
+      </section>
+      <button class="찬단추" id="OX다음단추" onclick="OX다음()">${마지막인가 ? '결과 보기' : '다음 →'}</button>
+      <p class="흐림작게가운데">Enter · 스페이스로도 넘어갑니다</p>`}
+
+    <p class="흐림작게가운데">이번에 맞음 ${OX풀이.맞은} · 틀림 ${OX풀이.틀린}</p>
+    <button class="뒤로가운데" onclick="OX그만두기()">그만두기 (여기까지 저장됩니다)</button>
+  `;
+}
+
+function OX답하기(답) {
+  if (!OX풀이 || OX풀이.답 !== null) return;
+  const 지문 = OX풀이.지문들[OX풀이.현재];
+  const 맞음 = 답 === 지문.정답;
+  OX풀이.답 = 답;
+  if (맞음) OX풀이.맞은 += 1; else OX풀이.틀린 += 1;
+  OX.반영(지문.키, 맞음);   // 지문마다 바로 남긴다. 그만둬도 잃는 것이 없다
+  OX지문그리기();
+}
+
+function OX다음() {
+  if (!OX풀이 || OX풀이.답 === null) return;
+  OX풀이.답 = null;
+  OX풀이.현재 += 1;
+  if (OX풀이.현재 >= OX풀이.지문들.length) {
+    OX풀이.끝 = true;
+    return OX바퀴끝화면(OX풀이.범위키, OX풀이);
+  }
+  OX지문그리기();
+}
+
+function OX그만두기() {
+  OX풀이 = null;
+  이동('ox');
+  저절로맞추기();
+}
+
+/** 범위를 한 바퀴 다 돌았을 때(또는 틀린 지문을 다 다시 봤을 때) */
+function OX바퀴끝화면(범위키, 마친) {
+  OX풀이 = null;
+  const 현 = OX.현황(범위키);
+  const 틀린 = 범위키 === '틀린' ? OX.틀린지문들().length : 현.틀린;
+  const 푼수 = 마친 ? 마친.맞은 + 마친.틀린 : 0;
+
+  뿌리.innerHTML = `
+    <header class="머리">
+      <button class="뒤로" onclick="이동('ox')">← OX 홈</button>
+      <h1>${범위키 === '틀린' ? '다시 풀기 끝' : `${현.바퀴.회}바퀴 끝`}</h1>
+    </header>
+    <section class="카드">
+      <h2>${안전글(OX.범위이름(범위키))}</h2>
+      ${푼수 ? `<p class="큰점수">${마친.맞은}/${푼수}</p>
+               <p class="흐림가운데">이번에 푼 지문 중 맞힌 수 (${Math.round((마친.맞은 / 푼수) * 100)}%)</p>` : ''}
+      <p class="흐림">${틀린 ? `틀린 채로 남은 지문 ${틀린}개 — 맞힐 때까지 다시 낼 수 있습니다.` : '틀린 채로 남은 지문이 없습니다 🎉'}</p>
+    </section>
+    ${틀린 ? `<button class="찬단추" onclick="이동('ox풀기/틀린')">❌ 틀린 지문만 다시 (${틀린})</button>` : ''}
+    ${범위키 !== '틀린' ? `<button class="${틀린 ? '선단추' : '찬단추'}" id="OX다음바퀴단추">${현.바퀴.회 + 1}바퀴 시작</button>` : ''}
+    <button class="선단추" onclick="이동('ox')">OX 홈으로</button>
+  `;
+  document.getElementById('OX다음바퀴단추')?.addEventListener('click', () => OX다음바퀴(범위키));
+  저절로맞추기();
+}
+
+// 자판으로도 푼다 (PC에서 빠르게 돌릴 때). O·X·1·2 로 답하고 Enter·스페이스·→ 로 넘어간다.
+document.addEventListener('keydown', (event) => {
+  if (!OX풀이 || event.metaKey || event.ctrlKey || event.altKey) return;
+  if (event.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) return;
+  const 키 = event.key;
+  if (OX풀이.답 === null) {
+    if (키 === 'o' || 키 === 'O' || 키 === '1' || 키 === 'ㅐ') return OX답하기('O');
+    if (키 === 'x' || 키 === 'X' || 키 === '2' || 키 === 'ㅌ') return OX답하기('X');
+  } else if (키 === 'Enter' || 키 === ' ' || 키 === 'ArrowRight') {
+    event.preventDefault();
+    OX다음();
+  }
+});
+
 // 화면으로 돌아왔을 때도 맞춥니다. 탭을 켜 둔 채 폰으로 풀고 다시 이 탭을 보면
 // 새로 고치지 않는 한 옛 기록이 그대로 서 있게 되기 때문입니다(2026-08-08).
 // 너무 자주 두드리지 않게 30초에 한 번으로 묶습니다.
@@ -1554,7 +1824,7 @@ document.addEventListener('visibilitychange', () => {
  * 인터넷이 없거나 서버가 자고 있으면 조용히 넘어갑니다.
  */
 async function 저절로맞추기() {
-  if (맞추는중 || 풀이 || !동기화.로그인했나()) return;
+  if (맞추는중 || 풀이 || OX풀이 || !동기화.로그인했나()) return;
   맞추는중 = true;
   try {
     const 됐나 = await 동기화.살짝맞추기();
@@ -1569,6 +1839,8 @@ async function 저절로맞추기() {
 // **반드시 파일 맨 끝**에 둔다. 위에 두면 아래에서 let/const로 선언한 것을
 // 초기화 전에 읽어 TDZ 오류가 나고, 화면이 통째로 안 뜬다
 // (2026-08-08 '맞추는중'을 아래에 선언했다가 실제로 터졌다).
+// 문제키 방식이 바뀌어(2026-09-10 sha256) 옛 열쇠로 쌓인 기록을 먼저 새 열쇠로 옮긴다.
+저장소.옛키이전(단원들);
 그리기();
 // 앱을 열 때 한 번 맞춘다(로그인해 두었을 때만, 안 되면 조용히 넘어간다)
 저절로맞추기();
